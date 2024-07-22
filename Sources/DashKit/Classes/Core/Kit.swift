@@ -44,8 +44,8 @@ public class Kit: AbstractKit {
         case .mainNet:
             let apiTransactionProviderUrl = "https://insight.dash.org/insight-api"
 
-            if case .blockchair = syncMode {
-                let blockchairApi = BlockchairApi(chainId: network.blockchairChainId, logger: logger)
+            if case let .blockchair(key) = syncMode {
+                let blockchairApi = BlockchairApi(secretKey: key, chainId: network.blockchairChainId, logger: logger)
                 let blockchairBlockHashFetcher = BlockchairBlockHashFetcher(blockchairApi: blockchairApi)
                 let blockchairProvider = BlockchairTransactionProvider(blockchairApi: blockchairApi, blockHashFetcher: blockchairBlockHashFetcher)
                 let insightApiProvider = InsightApi(url: apiTransactionProviderUrl, logger: logger)
@@ -213,6 +213,10 @@ public class Kit: AbstractKit {
         transactionInfos.compactMap { $0 as? DashTransactionInfo }
     }
 
+    override public func send(to address: String, value: Int, feeRate: Int, sortType: TransactionDataSortType, pluginData _: [UInt8: IPluginData]) throws -> FullTransaction {
+        try super.send(to: address, value: value, feeRate: feeRate, sortType: sortType)
+    }
+
     public func transactions(fromUid: String? = nil, type: TransactionFilterType?, limit: Int? = nil) -> [DashTransactionInfo] {
         cast(transactionInfos: super.transactions(fromUid: fromUid, type: type, limit: limit))
     }
@@ -268,34 +272,5 @@ extension Kit {
 
     private static func databaseFileName(walletId: String, networkType: NetworkType, syncMode: BitcoinCore.SyncMode) -> String {
         "\(walletId)-\(networkType.rawValue)-\(syncMode)"
-    }
-    
-    private static func addressConverter(network: INetwork) -> AddressConverterChain {
-        let addressConverter = AddressConverterChain()
-        addressConverter.prepend(addressConverter: Base58AddressConverter(addressVersion: network.pubKeyHash, addressScriptVersion: network.scriptHash))
-
-        return addressConverter
-    }
-
-    public static func firstAddress(seed: Data, networkType: NetworkType) throws -> Address {
-        let network = networkType.network
-
-        return try BitcoinCore.firstAddress(
-            seed: seed,
-            purpose: Purpose.bip44,
-            network: network,
-            addressCoverter: addressConverter(network: network)
-        )
-    }
-    
-    public static func firstAddress(extendedKey: HDExtendedKey, networkType: NetworkType) throws -> Address {
-        let network = networkType.network
-        
-        return try BitcoinCore.firstAddress(
-            extendedKey: extendedKey,
-            purpose: Purpose.bip44,
-            network: network,
-            addressCoverter: addressConverter(network: network)
-        )
     }
 }

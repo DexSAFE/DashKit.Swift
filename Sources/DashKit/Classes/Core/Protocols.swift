@@ -18,7 +18,7 @@ protocol IDashBlockValidatorHelper {
 }
 
 protocol IDashTransactionSizeCalculator {
-    func transactionSize(previousOutputs: [Output], outputScriptTypes: [ScriptType], memo: String?) -> Int
+    func transactionSize(previousOutputs: [Output], outputScriptTypes: [ScriptType]) -> Int
     func outputSize(type: ScriptType) -> Int
     func inputSize(type: ScriptType) -> Int
     func toBytes(fee: Int) -> Int
@@ -93,7 +93,6 @@ protocol IDashStorage {
     func block(byHash: Data) -> Block?
 
     func unspentOutputs() -> [UnspentOutput]
-    func outputsCount(transactionHash: Data) -> Int
 
     func transactionExists(byHash: Data) -> Bool
     func transactionFullInfo(byHash hash: Data) -> FullTransactionForInfo?
